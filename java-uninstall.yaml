@@ -1,0 +1,10 @@
+---
+- hosts: 192.168.56.15
+  become: true
+  tasks:
+   - name: remove java
+     apt:
+       name: openjdk-8-jre-headless
+       state: absent
+   - name: remove java path
+     shell:  rm -rf /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java

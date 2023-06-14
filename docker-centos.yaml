@@ -1,0 +1,26 @@
+---
+- hosts: 192.168.56.3
+  become: true
+  tasks:
+   - name: Installing yum-utils
+     yum: name=yum-utils state=present
+   - name: adding docker repo 
+     get_url: 
+       url: https://download.docker.com/linux/centos/docker-ce.repo
+       dest: /etc/yum.repos.d/docker-ce.repo
+   - name: installing docker packages
+     yum: 
+       name: "{{item}}"
+       update_cache: yes 
+       state: latest
+     loop:
+        - docker-ce
+        - docker-ce-cli
+        - containerd.io 
+        - docker-buildx-plugin
+        - docker-compose-plugin
+   - name: start docker service 
+     service:
+       name: docker
+       state: started
+       enabled: yes 

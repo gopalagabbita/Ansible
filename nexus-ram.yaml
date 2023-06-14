@@ -1,0 +1,64 @@
+---
+- hosts: 
+  become: true
+  tasks:
+   - name: install java 1.8
+     yum: 
+       name: java-1.8.0-openjdk
+       state: latest
+   - name: download url
+     get_url:
+       url: https://download.sonatype.com/nexus/3/nexus-3.39.0-01-unix.tar.gz
+       dest: /usr/local
+   - name: extract file
+     unarchive:
+       src: /usr/local/nexus-3.39.0-01-unix.tar.gz
+       dest: /usr/local
+       remote_src: yes
+   - name: rename the nexus
+     shell: mv /usr/local/nexus-3.39.0-01 /usr/local/nexus/
+   - name: create admin-user
+     user:
+       name: nexus
+       shell: /bin/bash
+       group: nexus
+       comment: "nexus management Account"
+       expires: -1
+       password: "{{'nexus' | password_hash('sha512','A512')}}"
+   - name: generate sudo permissions
+     copy:
+       content: 'nexus ALL=(ALL:ALL) NOPASSWD: ALL'
+       dest: /etc/sudoers.d/nexus
+       validate: '/usr/sbin/visudo -cf %s'
+   - name: change owner and group permissions
+     file:
+       path: /usr/local/nexus/
+       owner: nexus
+       group: nexus
+       mode: 0775
+       recurse: yes
+       state: directory
+   - name: change ownerand group permissions to /usr/local
+     file:
+       path: /usr/local/sonatype-work/
+       owner: nexus
+       group: nexus
+       mode: 0755
+       recurse: yes
+       state: directory
+   - name: set run-user
+     lineinfile:
+       dest: /usr/local/nexus/bin/nexus.rc
+       regexp: "#run_as_user="
+       line: "run_as_user=nexus"
+       backrefs: true
+   - name: create soft link
+     file:
+       src: /usr/local/nexus/bin/nexus
+       dest: /etc/init.d/nexus
+       state: link
+   - name: start nexus server
+     systemd:
+       name: nexus
+       daemon_reload: yes
+       enabled: yes

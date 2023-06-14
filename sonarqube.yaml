@@ -1,0 +1,32 @@
+---
+- hosts: 
+  become: true
+  tasks:
+- name: Installing packages
+  apt:
+    name: "{{with_items}}"
+    state: present 
+  loop:
+    - wget
+    - unzip
+- name: download sonarqube URL 
+  get_url: 
+    url: https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-10.0.0.68432.zip
+    dest: /usr/local
+- name: unzip file 
+  unarchive:
+    src: /usr/local/sonarqube-10.0.0.68432.zip
+    dest: /usr/local 
+    remote_src: yes
+- name: rename the sonarqube
+  shell: mv /usr/local/sonarqube-10.0.0.6832 /usr/local/sonarqube 
+- name: create a sonar user 
+  user:
+    name: sonar 
+    shell: /bin/bash 
+    group: sonar 
+    expires: -1
+    password: "{{'sonar' | password_hash('sha512','A512')}}"
+- name: generate sudo permissions 
+  copy:
+    content: 
