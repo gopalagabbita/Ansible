@@ -29,4 +29,31 @@
     password: "{{'sonar' | password_hash('sha512','A512')}}"
 - name: generate sudo permissions 
   copy:
-    content: 
+    content: 'sonar ALL=(ALL:ALL) NOPASSWD: ALL'
+    dest: /etc/sudoers.d/sonar
+    validate: '/usr/sbin/visudo -cf %s'
+- name: change owner and group permissions to /opt/sonarqube/
+  file:
+    path: /opt/sonarqube/
+    owner: sonar
+    group: sonar
+    mode: 0755
+    recurse: yes
+    state: directory
+- name: softlink creation
+  file: 
+    src: /opt/sonarqube/bin/linux-x86-64/sonar.sh
+    dest: /etc/init.d/sonar
+    state: link
+- name: add lines 
+  lineinfile:
+    dest: /etc/init.d/sonar
+    regexp:
+    line: 
+- name: start sonar service 
+  systemd:
+    name: sonarqube 
+    daemon_reload: yes
+    enabled: yes 
+
+
