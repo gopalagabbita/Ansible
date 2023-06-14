@@ -1,0 +1,12 @@
+---
+ - hosts: 192.168.56.15 
+   become: true 
+   tasks:
+     - name: uninstall wget 
+       apt: name=wget state=absent 
+     - name: uninstall java
+       apt: name=openjdk-11-jre-headless state=absent 
+     - name: uninstall jenkins 
+       apt: name=jenkins state=absent
+     - name: removal of jenkins folder 
+       shell: rm -rf /var/lib/jenkins
