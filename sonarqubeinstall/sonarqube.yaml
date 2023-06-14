@@ -46,10 +46,14 @@
     dest: /etc/init.d/sonar
     state: link
 - name: add lines 
-  lineinfile:
-    dest: /etc/init.d/sonar
-    regexp:
-    line: 
+  blockinfile:
+    path: /etc/init.d/sonar
+    block: |
+      SONAR_HOME=/opt/sonarqube
+      PLATFORM=linux-x86-64
+      WRAPPER_CMD="${SONAR_HOME}/bin/${PLATFORM}/wrapper"
+      WRAPPER_CONF="${SONAR_HOME}/conf/wrapper.conf"
+      PIDDIR="/opt/sonarqube/"
 - name: start sonar service 
   systemd:
     name: sonarqube 
