@@ -1,63 +1,70 @@
 ---
-- hosts: 
+- hosts: 172.31.14.154
   become: true
   tasks:
-- name: Installing packages
-  apt:
-    name: "{{with_items}}"
-    state: present 
-  loop:
-    - wget
-    - unzip
-- name: download sonarqube URL 
-  get_url: 
-    url: https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-10.0.0.68432.zip
-    dest: /usr/local
-- name: unzip file 
-  unarchive:
-    src: /usr/local/sonarqube-10.0.0.68432.zip
-    dest: /usr/local 
-    remote_src: yes
-- name: rename the sonarqube
-  shell: mv /usr/local/sonarqube-10.0.0.6832 /usr/local/sonarqube 
-- name: create a sonar user 
-  user:
-    name: sonar 
-    shell: /bin/bash 
-    group: sonar 
-    expires: -1
-    password: "{{'sonar' | password_hash('sha512','A512')}}"
-- name: generate sudo permissions 
-  copy:
-    content: 'sonar ALL=(ALL:ALL) NOPASSWD: ALL'
-    dest: /etc/sudoers.d/sonar
-    validate: '/usr/sbin/visudo -cf %s'
-- name: change owner and group permissions to /opt/sonarqube/
-  file:
-    path: /opt/sonarqube/
-    owner: sonar
-    group: sonar
-    mode: 0755
-    recurse: yes
-    state: directory
-- name: softlink creation
-  file: 
-    src: /opt/sonarqube/bin/linux-x86-64/sonar.sh
-    dest: /etc/init.d/sonar
-    state: link
-- name: add lines 
-  blockinfile:
-    path: /etc/init.d/sonar
-    block: |
-      SONAR_HOME=/opt/sonarqube
-      PLATFORM=linux-x86-64
-      WRAPPER_CMD="${SONAR_HOME}/bin/${PLATFORM}/wrapper"
-      WRAPPER_CONF="${SONAR_HOME}/conf/wrapper.conf"
-      PIDDIR="/opt/sonarqube/"
-- name: start sonar service 
-  systemd:
-    name: sonarqube 
-    daemon_reload: yes
-    enabled: yes 
+   - name: Installing packages
+     apt:
+       name: "{{item}}"
+       update_cache: yes
+       state: present 
+     loop:
+        - wget
+        - unzip
+   - name: download sonarqube URL 
+     get_url: 
+        url: https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-10.0.0.68432.zip
+        dest: /opt/
+   - name: unzip file 
+     unarchive:
+       src: /opt/sonarqube-10.0.0.68432.zip
+       dest: /opt/
+       remote_src: yes
+   - name: rename the sonarqube
+     shell: mv /opt/sonarqube-10.0.0.68432 /opt/sonarqube 
+   - name: create a sonaruser 
+     user:
+       name: sonar
+       create_home: true 
+       shell: /bin/bash 
+       comment: "sonarqube acc" 
+       expires: -1
+       password: "{{'sonar' | password_hash('sha512','A512')}}"
+   - name: generate sudo permissions 
+     copy:
+       content: 'sonar ALL=(ALL:ALL) NOPASSWD: ALL'
+       dest: /etc/sudoers.d/sonar
+       validate: '/usr/sbin/visudo -cf %s'
+   - name: change owner and group permissions to /opt/sonarqube/
+     file:
+       path: /opt/sonarqube/
+       owner: sonar
+       group: sonar
+       mode: 0755
+       recurse: yes
+       state: directory
+   - name: installing sonarqube
+     shell
+       cmd: "/opt/sonarqube/bin/linux-x864/sonar.sh start"
+       become_user: sonar 
+       become_method: "su" 
+   - name: softlink creation
+     file: 
+       src: /opt/sonarqube/bin/linux-x86-64/sonar.sh
+       dest: /etc/init.d/sonar
+       state: link
+   - name: add lines 
+     blockinfile:
+       path: /etc/init.d/sonar
+       block: |
+         SONAR_HOME=/opt/sonarqube
+         PLATFORM=linux-x86-64
+         WRAPPER_CMD="${SONAR_HOME}/bin/${PLATFORM}/wrapper"
+         WRAPPER_CONF="${SONAR_HOME}/conf/wrapper.conf"
+         PIDDIR="/opt/sonarqube/"
+   - name: start sonar service 
+     systemd:
+       name: sonarqube 
+       daemon_reload: yes
+       enabled: yes 
 
 
