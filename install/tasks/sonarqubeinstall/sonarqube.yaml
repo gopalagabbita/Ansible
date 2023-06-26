@@ -44,11 +44,6 @@
        mode: 0755
        recurse: yes
        state: directory
-   - name: installing sonarqube
-     shell
-       cmd: "/opt/sonarqube/bin/linux-x864/sonar.sh start"
-       become_user: sonar 
-       become_method: "su" 
    - name: softlink creation
      file: 
        src: /opt/sonarqube/bin/linux-x86-64/sonar.sh
